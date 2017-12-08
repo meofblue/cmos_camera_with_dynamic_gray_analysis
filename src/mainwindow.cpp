@@ -399,7 +399,7 @@ void MainWindow::switchResolution_2048(bool flag)
 		m_imageModel.setResolutionType(5);
 		ui.m_showLabel->setResolutionType(5);
 		//clearPointData();
-		ui.m_showLabel->setPointChoosed(640, 480, 1024, 768);
+		ui.m_showLabel->setPointChoosed(639, 479, 1024, 767);
 	}
 }
 
@@ -420,7 +420,7 @@ void MainWindow::switchResolution_1920(bool flag)
 		m_imageModel.setResolutionType(4);
 		ui.m_showLabel->setResolutionType(4);
 	//	clearPointData();
-		ui.m_showLabel->setPointChoosed(640, 360, 960, 540);
+		ui.m_showLabel->setPointChoosed(639, 359, 959, 539);
 	}
 }
 
@@ -439,7 +439,7 @@ void MainWindow::switchResolution_1280(bool flag)
 		setGain();
 		ui.m_showLabel->setResolutionType(3);
 		//clearPointData();
-		ui.m_showLabel->setPointChoosed(640, 480, 640, 480);
+		ui.m_showLabel->setPointChoosed(639, 479, 639, 479);
 	}
 }
 
@@ -458,7 +458,7 @@ void MainWindow::switchResolution_640(bool flag)
 		setGain();
 		ui.m_showLabel->setResolutionType(2);
 	//	clearPointData();
-		ui.m_showLabel->setPointChoosed(320, 240, 320, 240);
+		ui.m_showLabel->setPointChoosed(319, 239, 319, 239);
 	}
 }
 
@@ -1067,8 +1067,8 @@ void MainWindow::getPointData(int x ,int y, int data)
         //更新曲线
 		if (resolutionType == 3)
 		{   
-			//5次取一平均
-			if (updataGraphFlag >= 5)
+			//10次取一平均
+			if (updataGraphFlag >= 10)//5
 			{
 				gray_avg = (gray_avg + data) / 2 + 0.5;
 				ui.m_customPlot->realtimeData(msecs, gray_avg);
@@ -1087,7 +1087,7 @@ void MainWindow::getPointData(int x ,int y, int data)
 		}
 		else if (resolutionType == 4)
 		{
-			if (updataGraphFlag >= 3)
+			if (updataGraphFlag >= 6)//3
 			{
 				gray_avg = (gray_avg + data) / 2 + 0.5;
 				ui.m_customPlot->realtimeData(msecs, gray_avg);		   
@@ -1106,7 +1106,7 @@ void MainWindow::getPointData(int x ,int y, int data)
 		}
 		else if (resolutionType == 5)
 		{
-			if (updataGraphFlag >= 1)
+			if (updataGraphFlag >= 2)//1
 			{
 				gray_avg = (gray_avg + data) / 2 + 0.5;
 				ui.m_customPlot->realtimeData(msecs, gray_avg);
@@ -1125,7 +1125,7 @@ void MainWindow::getPointData(int x ,int y, int data)
 		}
 		else if (resolutionType == 2)
 		{
-			if (updataGraphFlag >= 15)
+			if (updataGraphFlag >= 30)//15
 			{
 				gray_avg = (gray_avg + data) / 2 + 0.5;
 				ui.m_customPlot->realtimeData(msecs, gray_avg);
@@ -1144,7 +1144,22 @@ void MainWindow::getPointData(int x ,int y, int data)
 		}
 		else
 		{
-			ui.m_customPlot->realtimeData(msecs, data);
+			if (updataGraphFlag >= 2)//1
+			{
+				gray_avg = (gray_avg + data) / 2 + 0.5;
+				ui.m_customPlot->realtimeData(msecs, gray_avg);
+				updataGraphFlag = 0;
+			}
+			else if (updataGraphFlag == 0)
+			{
+				updataGraphFlag++;
+				gray_avg = data;
+			}
+			else
+			{
+				updataGraphFlag++;
+				gray_avg = (gray_avg + data) / 2 + 0.5;
+			}
 		}
 		//显示像素点灰度值
 		if (resolutionType == 3)

@@ -267,7 +267,14 @@ void EventLabel::paintEvent(QPaintEvent *event)
 			else	
 		     	emit sendPointPos(x_orig, y_orig,0, x_move_click, y_move_click);//发送点击时刻的位置数据,只发送一次
 			QPainter painter(this);
-			painter.setPen(QPen(Qt::red, 1, Qt::SolidLine));
+			painter.setPen(QPen(Qt::blue, 1, Qt::SolidLine));
+			int labelWidth = width();
+			int labelHeight = height();
+			QLineF line3(0, labelHeight / 2 - 1, labelWidth - 1, labelHeight / 2 - 1);
+			painter.drawLine(line3);
+			QLineF line4(labelWidth / 2 - 1, 0, labelWidth / 2 - 1, labelHeight - 1);
+			painter.drawLine(line4);
+			painter.setPen(QPen(Qt::red, 3, Qt::SolidLine));
 			QLineF line(x_move_click - 5, y_move_click, x_move_click + 5, y_move_click);
 			painter.drawLine(line);
 		//	painter.setPen(QPen(Qt::red, 1, Qt::SolidLine));
@@ -282,12 +289,20 @@ void EventLabel::paintEvent(QPaintEvent *event)
 	else if (repaintFlag)//图像一刷新，就重画该点
 	{
 			QPainter painter(this);
-			painter.setPen(QPen(Qt::red, 1, Qt::SolidLine));
+			painter.setPen(QPen(Qt::blue, 1, Qt::SolidLine));
+			int labelWidth = width();
+			int labelHeight = height();
+			QLineF line3(0, labelHeight / 2 - 1, labelWidth - 1, labelHeight / 2 - 1);
+			painter.drawLine(line3);
+			QLineF line4(labelWidth / 2 - 1, 0, labelWidth / 2 - 1, labelHeight - 1);
+			painter.drawLine(line4);
+			painter.setPen(QPen(Qt::red, 3, Qt::SolidLine));
 			QLineF line(x_move_click - 5, y_move_click, x_move_click + 5, y_move_click);
 			painter.drawLine(line);
 			//	painter.setPen(QPen(Qt::red, 1, Qt::SolidLine));
 			QLineF line1(x_move_click, y_move_click - 5, x_move_click, y_move_click + 5);
 			painter.drawLine(line1);
+			
 		//	painter.setPen(QPen(Qt::red, 5));
 		//	painter.drawPoint(x_move_click, y_move_click);
 	}
