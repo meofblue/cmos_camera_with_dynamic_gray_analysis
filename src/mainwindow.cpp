@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
 	
  	ui.setupUi(this);
 	//ui.m_showFrame->setFixedSize(QSize(1280, 960));
+	ui.m_customPlot->setupRealtimeDataDemo();
 	ui.m_showFrame->setFixedSize(QSize(m_imageWidth, m_imageHeight));
 	ui.m_showLabel->setFixedSize(QSize(m_imageWidth, m_imageHeight));
 		
@@ -331,6 +332,10 @@ void MainWindow::changeWidthTo8bitsPerPixel(bool flag)
 	m_imageModel.changeWidthTo8bitsPerPixel(flag);
 	bits_8_flag = flag;
 	ui.m_customPlot->get8BitsFlag(flag);
+	if (ui.m_manualExposure->isChecked())
+		setExposureValue(ui.m_exposureSpinBox->value());
+	if (ui.m_manualExposure->isChecked())
+		setExposureValue(ui.m_exposureSpinBox->value());
 }
 
 void MainWindow::changeImageToColor(bool flag)
@@ -1065,7 +1070,7 @@ void MainWindow::getPointData(int x ,int y, int data)
 		int msecs = msecsTime.msecsTo(startTime);
 		msecs = -msecs;
         //更新曲线
-		if (resolutionType == 3)
+/*		if (resolutionType == 3)
 		{   
 			//10次取一平均
 			if (updataGraphFlag >= 10)//5
@@ -1160,110 +1165,179 @@ void MainWindow::getPointData(int x ,int y, int data)
 				updataGraphFlag++;
 				gray_avg = (gray_avg + data) / 2 + 0.5;
 			}
+		}*/ 
+		//更新曲线
+		if (resolutionType == 3)
+		{
+			if (updataGraphFlag >= 10)//5
+			{				
+				ui.m_customPlot->realtimeData(msecs, data);
+				updataGraphFlag = 0;
+			}
+			else
+			{
+				updataGraphFlag++;
+			}
+		}
+		else if (resolutionType == 4)
+		{
+			if (updataGraphFlag >= 6)//3
+			{
+				ui.m_customPlot->realtimeData(msecs, data);
+				updataGraphFlag = 0;
+			}
+			else
+			{
+				updataGraphFlag++;
+			}
+		}
+		else if (resolutionType == 5)
+		{
+			if (updataGraphFlag >= 4)//1
+			{
+				ui.m_customPlot->realtimeData(msecs, data);
+				updataGraphFlag = 0;
+			}
+			else
+			{
+				updataGraphFlag++;
+			}
+		}
+		else if (resolutionType == 2)
+		{
+			if (updataGraphFlag >= 30)//15
+			{
+				ui.m_customPlot->realtimeData(msecs, data);
+				updataGraphFlag = 0;
+			}
+			else
+			{
+				updataGraphFlag++;
+			}
+		}
+		else
+		{
+			if (updataGraphFlag >= 2)//1
+			{
+				ui.m_customPlot->realtimeData(msecs, data);
+				updataGraphFlag = 0;
+			}
+			else
+			{
+				updataGraphFlag++;
+			}
 		}
 		//显示像素点灰度值
 		if (resolutionType == 3)
 		{
-			if (updateDataFlag >= 27)
+			if (updateDataFlag >= 29)
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
+				qSort(gray, gray + 29);
+				gray_avg_show = 0;
+				for (int i = 5; i < 25; i++)
+				{
+					gray_avg_show += gray[i];
+				}
+				gray_avg_show = gray_avg_show / 20;
 				QString data_str = QString::number(gray_avg_show);
 				ui.m_point_data->setText(QString(data_str));
 				updateDataFlag = 0;
 			}
-			else if (updateDataFlag == 0)
-			{
-				gray_avg_show = data;
-				updateDataFlag++;
-			}
 			else
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
 				updateDataFlag++;
 			}
 		}
 		else if (resolutionType == 4)
 		{
-			if (updateDataFlag >= 17)
+			if (updateDataFlag >= 29)//17
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
+				qSort(gray, gray + 29);
+				gray_avg_show = 0;
+				for (int i = 5; i < 25; i++)
+				{
+					gray_avg_show += gray[i];
+				}
+				gray_avg_show = gray_avg_show / 20;
 				QString data_str = QString::number(gray_avg_show);
 				ui.m_point_data->setText(QString(data_str));
 				updateDataFlag = 0;
 			}
-			else if (updateDataFlag == 0)
-			{
-				gray_avg_show = data;
-				updateDataFlag++;
-			}
 			else
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
 				updateDataFlag++;
 			}
 		}
 		else if (resolutionType == 5)
 		{
-			if (updateDataFlag >= 12)
+			if (updateDataFlag >= 29)//12
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
+				qSort(gray, gray + 29);
+				gray_avg_show = 0;
+				for (int i = 5; i < 25; i++)
+				{
+					gray_avg_show += gray[i];
+				}
+				gray_avg_show = gray_avg_show / 20;
 				QString data_str = QString::number(gray_avg_show);
 				ui.m_point_data->setText(QString(data_str));
 				updateDataFlag = 0;
 			}
-			else if (updateDataFlag == 0)
-			{
-				gray_avg_show = data;
-				updateDataFlag++;
-			}
 			else
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
 				updateDataFlag++;
 			}
 		}
 		else if (resolutionType == 2)
 		{
-			if (updateDataFlag >= 95)
+			if (updateDataFlag >= 99)
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
+				qSort(gray, gray + 99);
+				gray_avg_show = 0;
+				for (int i = 10; i < 90; i++)
+				{
+					gray_avg_show += gray[i];
+				}
+				gray_avg_show = gray_avg_show / 80;
 				QString data_str = QString::number(gray_avg_show);
 				ui.m_point_data->setText(QString(data_str));
 				updateDataFlag = 0;
 			}
-			else if (updateDataFlag == 0)
-			{
-				gray_avg_show = data;
-				updateDataFlag++;
-			}
 			else
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
 				updateDataFlag++;
 			}
 		}
 		else //分辨率类型为2592
 		{
-			if (updateDataFlag >= 16)//2幅取一平均
+			if (updateDataFlag >=30)//2幅取一平均
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
+				qSort(gray, gray + 29);
+				gray_avg_show = 0;
+				for (int i = 5; i < 25; i++)
+				{
+					gray_avg_show += gray[i];
+				}
+				gray_avg_show = gray_avg_show / 20;
 				QString data_str = QString::number(gray_avg_show);
 				ui.m_point_data->setText(QString(data_str));
 				updateDataFlag = 0;
 			}
-			else if (updateDataFlag == 0)
-			{
-				gray_avg_show = data;
-				updateDataFlag++;
-			}
 			else
 			{
-				gray_avg_show = (gray_avg_show + data) / 2 + 0.5;
+				gray[updateDataFlag] = data;
 				updateDataFlag++;
 			}
-		}
-			
-			
+		}		
 	}
 }
 
@@ -1456,7 +1530,9 @@ void MainWindow::takeDarkImage()
 {
 	//等暗图像拍完了再settrue
 	ui.m_spacial_nonuniformity->setEnabled(false);
-	m_imageModel.takeImage(true,16);//darkFlag=true
+	ui.m_DSNU_show->clear();
+	ui.m_PRNU_show->clear();
+	m_imageModel.takeImage(true,30);//darkFlag=true，之前拍16幅
 //	QToolTip::setFont(QFont("Agency FB", 20));
 //	QToolTip::showText(QPoint(1150, 700), QStringLiteral("正在拍摄，请稍后……"));//鼠标一动qtooltip就没了
 //	takingImageFlag = true;
@@ -1467,7 +1543,9 @@ void MainWindow::takeDarkImage()
 void MainWindow::takeLightImage()
 {
 	ui.m_spacial_nonuniformity->setEnabled(false);
-	m_imageModel.takeImage(false,16);
+	ui.m_DSNU_show->clear();
+	ui.m_PRNU_show->clear();
+	m_imageModel.takeImage(false,30);
 //	QToolTip::setFont(QFont("Agency FB", 20));
 //	QToolTip::showText(QPoint(1150, 700), QStringLiteral("正在拍摄，请稍后……"));
 //	takingImageFlag = true;

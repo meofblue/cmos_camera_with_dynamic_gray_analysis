@@ -146,6 +146,7 @@ private:
 	int updateDataFlag;
 //	QMessageBox messageBox;
 //	bool takingImageFlag;
+	int gray[100];
 };
 
 

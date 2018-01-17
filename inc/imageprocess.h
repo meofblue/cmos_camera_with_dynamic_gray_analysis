@@ -81,10 +81,14 @@ private:
 	int imageNum;
 	bool takeContImageFlag;//拍摄连续几张图像的标志位
 
-	cv::Mat image[16];
+	cv::Mat image[30];
 	int i;
+	cv::Mat imageDarkAveraged_temp;
 	cv::Mat imageDarkAveraged;
+	cv::Mat DarkAveraged[2];
 	cv::Mat imageLightAveraged;
+	cv::Mat imageLightAveraged_temp;
+	cv::Mat LightAveraged[2];
 	double meanDark;
 	double meanLight;
 	double s2Dark;
@@ -92,7 +96,11 @@ private:
 	int cols;
 	int rows;
 	cv::Mat timeVarianceD;
+	cv::Mat timeVarianceD_temp;
+	cv::Mat timeVarianceD_array[2];
 	cv::Mat timeVarianceL;
+	cv::Mat timeVarianceL_temp;
+	cv::Mat timeVarianceL_array[2];
 	double stackTimeVarianceD;
 	double stackTimeVarianceL;
 	double s2DarkCorrected;
@@ -100,7 +108,7 @@ private:
 	bool darkImageCountedFlag;
 	bool lightImageCountedFlag;
 	double PRNU;
-	int DSNU;
+	double DSNU;
 	cv::Mat imageTake[10];
 	int imageTakeCount;
 	cv::Mat imageTakeAveraged;

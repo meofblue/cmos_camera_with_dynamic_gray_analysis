@@ -45,14 +45,13 @@ void ImageProcess::dataToImage(unsigned char *data, int bitsPerPixel, int width,
 		cv::Mat image8bits = cv::Mat(height, width, CV_8UC1, data);
 		if (takeContImageFlag)
 		{
-			if (i == imageNum)
+			if (i == imageNum )
 			{
 				takeContImageFlag = false;
 				calculateImage();
 			}
 			else
 			{
-				//image[i] = cv::Mat(height, width, CV_16UC1, cv::Scalar(0));
 				image8bits.convertTo(image[i], CV_16U);//从8位数据转为16位数据保存
 			 	i++;
 			}
@@ -334,8 +333,8 @@ void ImageProcess::setSavingPath(QString path)
 
 void ImageProcess::takeOriginalImage(const cv::Mat& image, const QPixmap& pixmap)
 {
-	QTime time = QTime::currentTime();
-	str = time.toString("hhmmsszzz");
+	QDateTime time = QDateTime::currentDateTime();
+	str = time.toString("MMdd-hhmmss");
 	QString path = m_path + "\\" + str + ".png";
 	cv::imwrite(path.toLocal8Bit().toStdString(), image);//保存12位图像
 	pixmap.save(m_path + "\\" + str + ".bmp");//保存8位图像
@@ -344,8 +343,8 @@ void ImageProcess::takeOriginalImage(const cv::Mat& image, const QPixmap& pixmap
 
 void ImageProcess::takeShowingImage(const cv::Mat& image, const QPixmap& pixmap)
 {
-	QTime time = QTime::currentTime();
-	str = time.toString("hhmmsszzz");
+	QDateTime time = QDateTime::currentDateTime();
+	str = time.toString("MMdd-hhmmss");
 //	QString path = m_path + "\\" + str + ".png";
 //	cv::imwrite(path.toLocal8Bit().toStdString(), image);
 	pixmap.save(m_path + "\\" + str + ".bmp");	
@@ -405,12 +404,20 @@ void ImageProcess::calculateImage()
 	{
 		//平均图像
 		//imageDarkAveraged = image[0];
-		imageDarkAveraged = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));//16幅图，8位的数据需要扩展到12位，12位数据扩展到16位
-		for (int j = 0; j < imageNum; j++)
+		imageDarkAveraged_temp = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));//如果16幅图，8位的数据需要扩展到12位，12位数据扩展到16位
+		//30幅图，循环两次，一次15幅图
+	    for (int j = 0; j < 15; j++)
 		{
-			imageDarkAveraged += image[j];
+			imageDarkAveraged_temp += image[j];
 		}
-		imageDarkAveraged = imageDarkAveraged / imageNum;//直接16幅图相加，值会超过255，溢出
+		DarkAveraged[0] = imageDarkAveraged_temp / 15 + 0.5;
+		imageDarkAveraged_temp = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
+	    for (int j = 15; j < 30; j++)
+	    {
+			imageDarkAveraged_temp += image[j];
+	    }
+		DarkAveraged[1] = imageDarkAveraged_temp / 15 + 0.5;
+		imageDarkAveraged = (DarkAveraged[0] + DarkAveraged[1]) / 2 + 0.5;
 		//平均灰度值		
 		meanDark = 0;
 		for (int m = 0; m < rows; m++)
@@ -434,17 +441,27 @@ void ImageProcess::calculateImage()
 		}	
 		s2Dark = s2Dark / (rows*cols - 1);
 		//时间残差
-		timeVarianceD = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));			
+		timeVarianceD_temp = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
+		timeVarianceD_array[0] = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
+		timeVarianceD_array[1] = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
+		timeVarianceD = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
 		for (int m = 0; m < rows; m++)
 		{
 			for (int n = 0; n < cols; n++)
 			{
-			//	timeVarianceD.ptr<ushort>(m)[n] = 0;
-				for (int l = 0; l < imageNum; l++)
+				timeVarianceD_temp.ptr<ushort>(m)[n] = 0;
+				for (int l = 0; l < 15; l++)
 				{
-					timeVarianceD.ptr<ushort>(m)[n] += pow(image[l].ptr<ushort>(m)[n] - imageDarkAveraged.ptr<ushort>(m)[n], 2);
+					timeVarianceD_temp.ptr<ushort>(m)[n] += pow(image[l].ptr<ushort>(m)[n] - imageDarkAveraged.ptr<ushort>(m)[n], 2);
 				}
-				timeVarianceD.ptr<ushort>(m)[n] = timeVarianceD.ptr<ushort>(m)[n] / (imageNum - 1);
+				timeVarianceD_array[0].ptr<ushort>(m)[n] = timeVarianceD_temp.ptr<ushort>(m)[n] / 2 + 0.5;//30个值分为两次15个值相加，每次15个值相加的权重是1/2
+				timeVarianceD_temp.ptr<ushort>(m)[n] = 0;
+				for (int l = 15; l < 30; l++)
+				{
+					timeVarianceD_temp.ptr<ushort>(m)[n] += pow(image[l].ptr<ushort>(m)[n] - imageDarkAveraged.ptr<ushort>(m)[n], 2);
+				}
+				timeVarianceD_array[1].ptr<ushort>(m)[n] = timeVarianceD_temp.ptr<ushort>(m)[n] / 2 + 0.5;
+				timeVarianceD.ptr<ushort>(m)[n] = (timeVarianceD_array[0].ptr<ushort>(m)[n] + timeVarianceD_array[1].ptr<ushort>(m)[n]) / (imageNum - 1);
 			}
 		}
 		stackTimeVarianceD = 0;
@@ -463,12 +480,19 @@ void ImageProcess::calculateImage()
 	else//亮图像计算
 	{
 		//平均图像
-		imageLightAveraged = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
-		for (int j = 0; j < imageNum; j++)
+		imageLightAveraged_temp = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
+		for (int j = 0; j < 15; j++)
 		{
-			imageLightAveraged += image[j];
+			imageLightAveraged_temp += image[j];
 		}
-		imageLightAveraged = imageLightAveraged / imageNum;
+		LightAveraged[0] = imageLightAveraged_temp / 15 + 0.5;//直接16幅图相加，值会超过255，溢出
+		imageLightAveraged_temp = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
+		for (int j = 15; j < 30; j++)
+		{
+			imageLightAveraged_temp += image[j];
+		}
+		LightAveraged[1] = imageLightAveraged_temp / 15 + 0.5;
+		imageLightAveraged = (LightAveraged[0] + LightAveraged[1]) / 2 + 0.5;
 		//平均值
 		meanLight = 0;	
 		for (int m = 0; m < rows; m++)
@@ -492,17 +516,27 @@ void ImageProcess::calculateImage()
 		}
 		s2Light = s2Light / (rows*cols - 1);
 		//时间残差
+		timeVarianceL_temp = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
+		timeVarianceL_array[0] = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
+		timeVarianceL_array[1] = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
 		timeVarianceL = cv::Mat(rows, cols, CV_16U, cv::Scalar(0));
 		for (int m = 0; m < rows; m++)
 		{
 			for (int n = 0; n < cols; n++)
 			{
-				//	timeVarianceL.ptr<ushort>(m)[n] = 0;
-				for (int l = 0; l < imageNum; l++)
+				timeVarianceL_temp.ptr<ushort>(m)[n] = 0;
+				for (int l = 0; l < 15; l++)
 				{
-					timeVarianceL.ptr<ushort>(m)[n] += pow(image[l].ptr<ushort>(m)[n] - imageLightAveraged.ptr<ushort>(m)[n], 2);
+					timeVarianceL_temp.ptr<ushort>(m)[n] += pow(image[l].ptr<ushort>(m)[n] - imageLightAveraged.ptr<ushort>(m)[n], 2);
 				}
-				timeVarianceL.ptr<ushort>(m)[n] = timeVarianceL.ptr<ushort>(m)[n] / (imageNum - 1);
+				timeVarianceL_array[0].ptr<ushort>(m)[n] = timeVarianceL_temp.ptr<ushort>(m)[n] / 2 + 0.5;//30个值分为两次15个值相加，每次15个值相加的权重是1/2
+				timeVarianceL_temp.ptr<ushort>(m)[n] = 0;
+				for (int l = 15; l < 30; l++)
+				{
+					timeVarianceL_temp.ptr<ushort>(m)[n] += pow(image[l].ptr<ushort>(m)[n] - imageLightAveraged.ptr<ushort>(m)[n], 2);
+				}
+				timeVarianceL_array[1].ptr<ushort>(m)[n] = timeVarianceL_temp.ptr<ushort>(m)[n] / 2 + 0.5;
+				timeVarianceL.ptr<ushort>(m)[n] = (timeVarianceL_array[0].ptr<ushort>(m)[n] + timeVarianceL_array[1].ptr<ushort>(m)[n]) / (imageNum - 1);
 			}
 		}
 		stackTimeVarianceL = 0;
@@ -529,6 +563,8 @@ void ImageProcess::countPRNU()
 		return;
 	}
 	PRNU = (sqrt(s2LightCorrected - s2DarkCorrected)) / (meanLight - meanDark) * 100;//因为单位是%所以需要乘以100
+	if (qIsNaN(PRNU))//判断PRNU是否无法计算（对负数求根号或分母为0，若为nan，则返回0）
+		PRNU = 0;
 	if (PRNU < 0)
 	{
 		emit sendPRNUWrongSignal(1);
@@ -545,6 +581,8 @@ void ImageProcess::countDSNU()
 		return;
 	}
 	DSNU = s2DarkCorrected ;
+	if (qIsNaN(DSNU))
+		DSNU = 0;
 	if (DSNU < 0)
 	{
 		emit sendDSNUWrongSignal(1);

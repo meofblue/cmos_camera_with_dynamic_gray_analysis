@@ -10,7 +10,7 @@ MyGraphPlot::MyGraphPlot(QFrame *frame_9)
 	:QCustomPlot(frame_9),
 	pngFlag(false)
 {
-	QBrush qBrush(QColor(245, 248, 234));//设置背景色  
+	QBrush qBrush(QColor(255, 0xF2, 0xCD));//设置背景色  
 	setBackground(qBrush);
 
 }
